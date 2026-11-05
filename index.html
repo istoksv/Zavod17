@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Калькулятор остатков</title>
+    <meta name="theme-color" content="#b6daf2">
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Калькулятор остатков","short_name":"Калькулятор","start_url":".","display":"standalone","background_color":"#b6daf2","theme_color":"#b6daf2","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3476/3476497.png","sizes":"512x512","type":"image/png"}]}'>
+    
+    <style>
+        :root {
+            --bg-color: #b6daf2; 
+            --card-bg: #ffffff;
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- ШАПКА --- */
+        .full-width-header {
+            width: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .header-logo {
+            width: 100%;
+            height: auto;
+            max-height: 35vh; 
+            object-fit: cover;
+        }
+
+        /* --- ОСНОВНОЙ КОНТЕНТ --- */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 20px 15px 100px 15px;
+        }
+
+        .calculator-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); 
+            padding: 24px;
+            width: 100%;
+            max-width: 500px; 
+            height: fit-content;
+            animation: slideUpFade 0.5s ease-out;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: var(--primary);
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #1e293b;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 14px 16px; 
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            outline: none;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            appearance: none; 
+        }
+
+        select {
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%230284c7%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px top 50%;
+            background-size: 12px auto;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.15);
+            transform: scale(1.02);
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 15px;
+            top: 42px;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #94a3b8;
+            cursor: pointer;
+            display: none;
+            padding: 5px;
+            transition: color 0.2s, transform 0.2s;
+        }
+        
+        .clear-btn:hover { color: #ef4444; transform: scale(1.1); }
+
+        .info-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: block;
+        }
+
+        .tara-info {
+            color: #b45309;
+            font-weight: 600;
+            display: none;
+        }
+
+        button.main-btn {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+        }
+
+        button.main-btn:active {
+            transform: scale(0.95);
+            background-color: var(--primary-hover);
+        }
+
+        .error {
+            color: #dc2626;
+            font-size: 0.95rem;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+            font-weight: 600;
+            animation: shake 0.4s;
+        }
+
+        /* --- ВЫЕЗЖАЮЩИЙ РЕЗУЛЬТАТ --- */
+        .result-sheet {
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            background-color: var(--card-bg);
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+            padding: 20px 20px 30px 20px;
+            text-align: center;
+            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+        }
+
+        .result-sheet.active {
+            bottom: 0;
+        }
+
+        .sheet-drag-handle {
+            width: 40px;
+            height: 5px;
+            background-color: #cbd5e1;
+            border-radius: 5px;
+            margin: 0 auto 15px auto;
+            cursor: pointer;
+        }
+
+        .result-label {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .result-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1.1;
+            margin: 10px 0 20px 0;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-copy {
+            background-color: #e0f2fe;
+            color: var(--primary);
+        }
+        
+        .btn-copy:active { transform: scale(0.95); }
+
+        .btn-close {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-close:active { transform: scale(0.95); }
+
+        /* --- ИСТОРИЯ --- */
+        .history-toggle {
+            margin-top: 25px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: opacity 0.2s;
+        }
+        
+        .history-toggle:hover { opacity: 0.8; }
+
+        .history-toggle svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .history-list {
+            margin-top: 10px;
+            display: none;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .history-list.active {
+            display: block;
+            animation: slideUpFade 0.3s ease-out;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 8px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            color: #334155;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-item span:last-child {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* --- АНИМАЦИИ --- */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse-anim {
+            animation: pulse 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* --- АДАПТИВ --- */
+        @media (max-width: 480px) {
+            .main-wrapper { padding: 15px 10px 100px 10px; }
+            .calculator-card { padding: 20px 15px; border-radius: 12px; }
+            h2 { font-size: 1.3rem; }
+            .result-value { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="full-width-header">
+        <img src="https://avatars.mds.yandex.net/i?id=6124276844c9718dbf02bd7e3d195efd_l-12898824-images-thumbs&ref=rim&n=13&w=1280&h=720" 
+             alt="Логотип" 
+             class="header-logo" 
+             onerror="this.style.display='none'">
+    </header>
+
+    <main class="main-wrapper">
+        <div class="calculator-card">
+            <h2>Калькулятор остатков</h2>
+
+            <div class="form-group">
+                <label for="materialSelect">Выберите материал:</label>
+                <!-- Данные: Вес_1шт | Название | Вес_шпули -->
+                <select id="materialSelect" onchange="updateForm()">
+                    <option value="" disabled selected>-- Выберите из списка --</option>
+                    <option value="1.4|Чай 0,5л|440">Этикетка Чай 0,5л</option>
+                    <option value="1.92|Чай 1л|530">Этикетка Чай 1л</option>
+                    <option value="0.29025|0.33л|185">Этикетка 0.33л</option>
+                    <option value="0.3872|0.5л|232">Этикетка 0.5л</option>
+                    <option value="0.54|1.0л|270">Этикетка 1.0л</option>
+                    <option value="0.6806|1.5л|300">Этикетка 1.5л</option>
+                    <option value="1.076|КОСМЕ|70">Этикетка КОСМЕ</option>
+                    <option disabled>------------------</option>
+                    <option value="0.036|ДМ|10.5">ДМ (Подложка)</option>
+                    <option value="0.155|ШК|30.7">ШК (Подложка)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="totalWeight">Общий вес рулона (в граммах):</label>
+                <input type="text" 
+                       id="totalWeight" 
+                       placeholder="Например: 1000" 
+                       inputmode="decimal" 
+                       pattern="[0-9]*" 
+                       oninput="toggleClearBtn()">
+                <button class="clear-btn" id="clearBtn" onclick="clearInput()">✕</button>
+                <span class="info-text" id="weightHint">Введите вес, который показывают весы.</span>
+                <span class="info-text tara-info" id="taraHint"></span>
+            </div>
+
+            <button class="main-btn" onclick="calculate()">Рассчитать</button>
+
+            <div class="error" id="errorMsg"></div>
+
+            <!-- История расчетов -->
+            <div class="history-toggle" onclick="toggleHistory()">
+                <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                Последние расчеты
+            </div>
+            <div class="history-list" id="historyList">
+                <!-- Сюда вставляются элементы истории через JS -->
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Выезжающая панель результата -->
+    <div class="result-sheet" id="resultSheet">
+        <div class="sheet-drag-handle" onclick="closeResult()"></div>
+        <div class="result-label">Количество штук:</div>
+        <div class="result-value" id="resultValue">0</div>
+        <div class="result-actions">
+            <button class="action-btn btn-copy" id="copyBtn" onclick="copyResult()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Копировать
+            </button>
+            <button class="action-btn btn-close" onclick="closeResult()">Закрыть</button>
+        </div>
+    </div>
+
+<script>
+    const select = document.getElementById('materialSelect');
+    const totalInput = document.getElementById('totalWeight');
+    const clearBtn = document.getElementById('clearBtn');
+    const resultSheet = document.getElementById('resultSheet');
+    const resultValue = document.getElementById('resultValue');
+    const errorMsg = document.getElementById('errorMsg');
+    const historyList = document.getElementById('historyList');
+    const copyBtn = document.getElementById('copyBtn');
+    const taraHint = document.getElementById('taraHint');
+    const weightHint = document.getElementById('weightHint');
+
+    // --- 1. ОФФЛАЙН РЕЖИМ (Service Worker) ---
+    if ('serviceWorker' in navigator) {
+        const swCode = `
+            self.addEventListener('install', (e) => {
+                e.waitUntil(caches.open('calc-v1').then((cache) => cache.addAll(['./'])));
+            });
+            self.addEventListener('fetch', (e) => {
+                e.respondWith(caches.match(e.request).then((response) => response || fetch(e.request)));
+            });
+        `;
+        const blob = new Blob([swCode], {type: 'application/javascript'});
+        const swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl).catch(err => console.log('SW error:', err));
+    }
+
+    // --- 2. УПРАВЛЕНИЕ ИНТЕРФЕЙСОМ ---
+    function toggleClearBtn() {
+        totalInput.value = totalInput.value.replace(/[^0-9.]/g, '');
+        clearBtn.style.display = totalInput.value ? 'block' : 'none';
+    }
+
+    function clearInput() {
+        totalInput.value = '';
+        toggleClearBtn();
+        totalInput.focus();
+    }
+
+    function updateForm() {
+        errorMsg.style.display = 'none';
+        totalInput.value = '';
+        toggleClearBtn();
+        
+        const val = select.value;
+        
+        // Показываем подсказку о весе шпули для выбранного материала
+        if (val) {
+            const [itemWeightStr, shortName, taraWeightStr] = val.split('|');
+            taraHint.style.display = 'block';
+            taraHint.textContent = `Вес шпули (${taraWeightStr} г) будет вычтен автоматически.`;
+            weightHint.textContent = "Введите общий вес рулона.";
+        } else {
+            taraHint.style.display = 'none';
+            weightHint.textContent = "Введите вес, который показывают весы.";
+        }
+        
+        totalInput.focus(); 
+    }
+
+    // --- 3. РАСЧЕТ И ВЫЕЗЖАЮЩАЯ ПАНЕЛЬ ---
+    function calculate() {
+        const val = select.value;
+        let totalWeight = parseFloat(totalInput.value.replace(',', '.'));
+        errorMsg.style.display = 'none';
+
+        if (!val) {
+            showError("Выберите материал из списка.");
+            return;
+        }
+        if (isNaN(totalWeight) || totalWeight <= 0) {
+            showError("Введите корректный общий вес.");
+            return;
+        }
+
+        const [itemWeightStr, shortName, taraWeightStr] = val.split('|');
+        const itemWeight = parseFloat(itemWeightStr);
+        const taraWeight = parseFloat(taraWeightStr);
+
+        // ВСЕГДА вычитаем тару (так как чекбокс убран)
+        let netWeight = totalWeight - taraWeight;
+        
+        if (netWeight <= 0) {
+            showError(`Вес слишком мал. Он меньше веса шпули (${taraWeight} г).`);
+            return;
+        }
+
+        const quantity = Math.floor(netWeight / itemWeight);
+
+        // Анимация пульсации
+        resultValue.classList.remove('pulse-anim');
+        void resultValue.offsetWidth;
+        resultValue.classList.add('pulse-anim');
+
+        // Показываем результат
+        resultValue.textContent = quantity.toLocaleString('ru-RU');
+        resultSheet.classList.add('active');
+
+        // Сброс кнопки копирования
+        copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Копировать`;
+        copyBtn.style.color = 'var(--primary)';
+
+        // Сохраняем в историю
+        saveToHistory(shortName, totalWeight, quantity);
+
+        // Вибрация
+        if (navigator.vibrate) navigator.vibrate(50);
+    }
+
+    function closeResult() {
+        resultSheet.classList.remove('active');
+    }
+
+    function showError(message) {
+        errorMsg.textContent = message;
+        errorMsg.style.display = 'block';
+        errorMsg.style.animation = 'none';
+        errorMsg.offsetHeight; 
+        errorMsg.style.animation = 'shake 0.4s';
+    }
+
+    // --- 4. КОПИРОВАНИЕ ---
+    function copyResult() {
+        const textToCopy = resultValue.textContent.replace(/\s/g, '');
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            copyBtn.innerHTML = `✅ Скопировано!`;
+            copyBtn.style.color = '#16a34a';
+            if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+            setTimeout(() => {
+                copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Копировать`;
+                copyBtn.style.color = 'var(--primary)';
+            }, 2000);
+        });
+    }
+
+    // --- 5. ИСТОРИЯ РАСЧЕТОВ ---
+    function toggleHistory() {
+        historyList.classList.toggle('active');
+    }
+
+    function saveToHistory(name, weight, qty) {
+        let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
+        const time = new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+        const newItem = { name, weight, qty, time };
+
+        history.unshift(newItem);
+        history = history.slice(0, 3);
+        
+        localStorage.setItem('calcHistory', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const history = JSON.parse(localStorage.getItem('calcHistory')) || [];
+        
+        if (history.length === 0) {
+            historyList.innerHTML = '<div style="text-align:center; font-size:0.8rem; color:#94a3b8;">История пуста</div>';
+            return;
+        }
+
+        historyList.innerHTML = history.map(item => `
+            <div class="history-item">
+                <span>${item.name} (${item.weight} г)</span>
+                <span>${item.qty.toLocaleString('ru-RU')} шт</span>
+            </div>
+        `).join('');
+    }
+
+    // Инициализация
+    renderHistory();
+</script>
+
+</body>
+</html>
