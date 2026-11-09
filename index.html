@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Калькулятор">
+    <title>Калькулятор остатков</title>
+    <meta name="theme-color" content="#7cb9e0">
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Калькулятор остатков","short_name":"Калькулятор","start_url":".","display":"standalone","background_color":"#7cb9e0","theme_color":"#7cb9e0","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3476/3476497.png","sizes":"512x512","type":"image/png"}]}'>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3476/3476497.png">
+
+    <style>
+        :root {
+            --bg-color: #7cb9e0;
+            --card-bg: rgba(255, 255, 255, 0.55);
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        html { height: 100%; -webkit-text-size-adjust: 100%; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #7cb9e0;
+            background-image:
+                linear-gradient(180deg,
+                    #7cb9e0 0%,
+                    #7cb9e0 14%,
+                    #74b0d8 36%,
+                    #5d9fcb 60%,
+                    #4a8fbe 78%,
+                    #5fa3cf 88%,
+                    #8cc6e8 100%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+            position: relative;
+            touch-action: manipulation;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                linear-gradient(180deg,
+                    rgba(124, 185, 224, 0.9) 0%,
+                    rgba(124, 185, 224, 0.35) 16%,
+                    rgba(124, 185, 224, 0) 32%),
+                radial-gradient(ellipse 120% 40% at 50% 108%,
+                    rgba(186, 230, 253, 0.55) 0%,
+                    rgba(186, 230, 253, 0.18) 45%,
+                    transparent 70%),
+                radial-gradient(circle at 80% 92%, rgba(2, 132, 199, 0.25) 0%, transparent 55%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            width: 460px; height: 460px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(200, 240, 255, 0.45), transparent 70%);
+            filter: blur(80px);
+            -webkit-filter: blur(80px);
+            bottom: -160px; left: 50%;
+            transform: translateX(-50%);
+            opacity: 0.7;
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+            animation: bottomGlow 16s ease-in-out infinite;
+        }
+        @keyframes bottomGlow {
+            0%, 100% { transform: translateX(-50%) translateY(0) scale(1); }
+            50%      { transform: translateX(-50%) translateY(-24px) scale(1.08); }
+        }
+
+        .full-width-header {
+            width: 100%;
+            background-color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            position: relative;
+        }
+
+        .header-logo {
+            width: 100%;
+            height: auto;
+            max-height: 35vh;
+            object-fit: cover;
+            animation: logoFloat 6s ease-in-out infinite;
+            transform-origin: center bottom;
+            will-change: transform;
+            display: block;
+            -webkit-mask-image: linear-gradient(180deg, #000 82%, transparent 100%);
+            mask-image: linear-gradient(180deg, #000 82%, transparent 100%);
+        }
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+            40%      { transform: translateY(-6px) rotate(-0.6deg) scale(1.015); }
+            70%      { transform: translateY(-3px) rotate(0.6deg) scale(1.01); }
+        }
+
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 20px 15px 100px 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .calculator-card {
+            background-color: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 24px;
+            box-shadow:
+                0 10px 40px rgba(2, 132, 199, 0.18),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            height: fit-content;
+            animation: slideUpFade 0.5s ease-out;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #0077c8;
+            font-size: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .form-group { margin-bottom: 18px; position: relative; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #1e293b;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            background-color: rgba(248, 250, 252, 0.8);
+            border: 1px solid rgba(203, 213, 225, 0.6);
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            -webkit-appearance: none;
+            appearance: none;
+            font-family: inherit;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%230284c7%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px top 50%;
+            background-size: 12px auto;
+            padding-right: 40px;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.15);
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 15px;
+            top: 42px;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #94a3b8;
+            cursor: pointer;
+            display: none;
+            padding: 5px;
+            transition: color 0.2s;
+            touch-action: manipulation;
+        }
+
+        .clear-btn:hover { color: #ef4444; }
+
+        .info-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: block;
+        }
+
+        .tara-info {
+            color: #b45309;
+            font-weight: 600;
+            display: none;
+        }
+
+        button.main-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(180deg, #2196f3 0%, #0d80d0 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 6px 20px rgba(13, 128, 208, 0.3);
+            font-family: inherit;
+            touch-action: manipulation;
+        }
+
+        button.main-btn.ready {
+            animation: readyPulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes readyPulse {
+            0%, 100% { box-shadow: 0 6px 20px rgba(13,128,208,0.3), 0 0 0 0 rgba(13,128,208,0.5); }
+            50%      { box-shadow: 0 6px 20px rgba(13,128,208,0.3), 0 0 0 12px rgba(13,128,208,0); }
+        }
+
+        button.main-btn:active { transform: scale(0.97); }
+
+        button { position: relative; overflow: hidden; touch-action: manipulation; }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            transform: scale(0);
+            animation: rippleAnim 0.6s linear;
+            pointer-events: none;
+        }
+        .action-btn .ripple { background: rgba(2, 132, 199, 0.25); }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+        .error {
+            color: #dc2626;
+            font-size: 0.95rem;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+            font-weight: 600;
+            animation: shake 0.4s;
+        }
+
+        .result-drop-wrap {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            width: 100%;
+            max-width: 520px;
+            z-index: 100;
+            transform: translate(-50%, 110%);
+            -webkit-transform: translate(-50%, 110%);
+            opacity: 0;
+            pointer-events: none;
+            will-change: transform, opacity;
+            padding-top: 40px;
+            transition:
+                transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 0.4s ease;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        .result-drop-wrap.active {
+            transform: translate(-50%, 0);
+            -webkit-transform: translate(-50%, 0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .result-drop-wrap.dragging {
+            transition: none !important;
+        }
+
+        .result-drop-wrap.closing-down {
+            transform: translate(-50%, 110%);
+            -webkit-transform: translate(-50%, 110%);
+            opacity: 0;
+            transition:
+                transform 0.5s cubic-bezier(0.55, 0.05, 0.85, 0.4),
+                opacity 0.4s ease;
+        }
+        .result-drop-wrap.closing-left {
+            transform: translate(-150%, 0) rotate(-8deg);
+            -webkit-transform: translate(-150%, 0) rotate(-8deg);
+            opacity: 0;
+            transition:
+                transform 0.5s cubic-bezier(0.55, 0.05, 0.85, 0.4),
+                opacity 0.4s ease;
+        }
+        .result-drop-wrap.closing-right {
+            transform: translate(50%, 0) rotate(8deg);
+            -webkit-transform: translate(50%, 0) rotate(8deg);
+            opacity: 0;
+            transition:
+                transform 0.5s cubic-bezier(0.55, 0.05, 0.85, 0.4),
+                opacity 0.4s ease;
+        }
+
+        .result-sheet {
+            position: relative;
+            background: linear-gradient(180deg, #e0f2fe 0%, #ffffff 35%, #ffffff 100%);
+            padding: 56px 26px 26px 26px;
+            text-align: center;
+            border-radius: 50% 50% 50% 50% / 12% 12% 50% 50%;
+            border-bottom-left-radius: 50px;
+            border-bottom-right-radius: 50px;
+            box-shadow:
+                0 20px 60px rgba(2, 132, 199, 0.35),
+                0 0 0 1px rgba(255,255,255,0.6) inset,
+                0 -2px 20px rgba(125, 211, 252, 0.4);
+            overflow: visible;
+        }
+
+        .result-sheet::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 22%;
+            width: 90px;
+            height: 60px;
+            background: radial-gradient(ellipse at center,
+                rgba(255,255,255,0.95) 0%,
+                rgba(255,255,255,0.4) 40%,
+                transparent 70%);
+            border-radius: 50%;
+            transform: rotate(-25deg);
+            pointer-events: none;
+            filter: blur(2px);
+            -webkit-filter: blur(2px);
+            z-index: 1;
+        }
+
+        .result-sheet::after {
+            content: '';
+            position: absolute;
+            top: 55px;
+            left: 18%;
+            width: 30px;
+            height: 18px;
+            background: rgba(255,255,255,0.85);
+            border-radius: 50%;
+            transform: rotate(-30deg);
+            pointer-events: none;
+            filter: blur(1px);
+            -webkit-filter: blur(1px);
+            z-index: 1;
+        }
+
+        .result-sheet .drop-tail {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            -webkit-transform: translateX(-50%);
+            width: 50px;
+            height: 60px;
+            background: linear-gradient(180deg, #bae6fd 0%, #e0f2fe 70%, transparent 100%);
+            border-radius: 50% 50% 40% 40% / 70% 70% 30% 30%;
+            pointer-events: none;
+            filter: blur(1px);
+            -webkit-filter: blur(1px);
+            z-index: 0;
+        }
+
+        .result-drop-wrap.active .result-sheet {
+            animation: dropBreath 3s ease-in-out 0.8s infinite;
+        }
+
+        @keyframes dropBreath {
+            0%, 100% {
+                box-shadow:
+                    0 20px 60px rgba(2, 132, 199, 0.35),
+                    0 0 0 1px rgba(255,255,255,0.6) inset,
+                    0 -2px 20px rgba(125, 211, 252, 0.4);
+            }
+            50% {
+                box-shadow:
+                    0 20px 70px rgba(2, 132, 199, 0.45),
+                    0 0 0 2px rgba(255,255,255,0.8) inset,
+                    0 -4px 30px rgba(125, 211, 252, 0.6);
+            }
+        }
+
+        .gas-bubble {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 50;
+            background: radial-gradient(circle at 30% 30%,
+                rgba(255, 255, 255, 0.15) 0%,
+                rgba(186, 230, 253, 0.08) 40%,
+                rgba(56, 189, 248, 0.05) 70%,
+                transparent 100%);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow:
+                inset -1px -1px 4px rgba(2, 132, 199, 0.15),
+                inset 1px 1px 3px rgba(255, 255, 255, 0.4),
+                0 0 6px rgba(56, 189, 248, 0.15);
+            will-change: transform, opacity;
+        }
+
+        .gas-bubble::after {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 20%;
+            width: 25%;
+            height: 18%;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            filter: blur(1px);
+            -webkit-filter: blur(1px);
+        }
+
+        .trail-particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99;
+            background: radial-gradient(circle at 30% 30%,
+                rgba(255,255,255,0.95) 0%,
+                rgba(186,230,253,0.85) 35%,
+                rgba(125,211,252,0.6) 70%,
+                transparent 100%);
+            box-shadow:
+                0 0 10px rgba(125, 211, 252, 0.7),
+                0 0 20px rgba(56, 189, 248, 0.4);
+            will-change: transform, opacity;
+        }
+
+        .splash {
+            position: absolute;
+            left: 50%;
+            bottom: -10px;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .splash-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #7dd3fc 0%, #bae6fd 60%, transparent 100%);
+            border-radius: 50%;
+            left: 0;
+            top: 0;
+            opacity: 0;
+        }
+
+        .result-drop-wrap.active .splash-dot:nth-child(1) { animation: splashFly1 0.8s ease-out 0.4s forwards; }
+        .result-drop-wrap.active .splash-dot:nth-child(2) { animation: splashFly2 0.8s ease-out 0.4s forwards; }
+        .result-drop-wrap.active .splash-dot:nth-child(3) { animation: splashFly3 0.8s ease-out 0.4s forwards; }
+        .result-drop-wrap.active .splash-dot:nth-child(4) { animation: splashFly4 0.8s ease-out 0.4s forwards; }
+        .result-drop-wrap.active .splash-dot:nth-child(5) { animation: splashFly5 0.8s ease-out 0.4s forwards; }
+        .result-drop-wrap.active .splash-dot:nth-child(6) { animation: splashFly6 0.8s ease-out 0.4s forwards; }
+
+        @keyframes splashFly1 { 0% {opacity:1;transform:translate(0,0) scale(1);} 100% {opacity:0;transform:translate(-70px,-40px) scale(0.4);} }
+        @keyframes splashFly2 { 0% {opacity:1;transform:translate(0,0) scale(1);} 100% {opacity:0;transform:translate(70px,-50px) scale(0.4);} }
+        @keyframes splashFly3 { 0% {opacity:1;transform:translate(0,0) scale(1);} 100% {opacity:0;transform:translate(-110px,-20px) scale(0.3);} }
+        @keyframes splashFly4 { 0% {opacity:1;transform:translate(0,0) scale(1);} 100% {opacity:0;transform:translate(110px,-25px) scale(0.3);} }
+        @keyframes splashFly5 { 0% {opacity:1;transform:translate(0,0) scale(1);} 100% {opacity:0;transform:translate(-30px,-80px) scale(0.35);} }
+        @keyframes splashFly6 { 0% {opacity:1;transform:translate(0,0) scale(1);} 100% {opacity:0;transform:translate(40px,-75px) scale(0.35);} }
+
+        .sheet-drag-handle {
+            width: 40px;
+            height: 5px;
+            background-color: rgba(2, 132, 199, 0.25);
+            border-radius: 5px;
+            margin: 0 auto 6px auto;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+            z-index: 2;
+            touch-action: none;
+            padding: 10px 0;
+            margin-top: -10px;
+            margin-bottom: -4px;
+            background-clip: content-box;
+            -webkit-background-clip: content-box;
+        }
+        .sheet-drag-handle:hover { background-color: rgba(2, 132, 199, 0.5); }
+
+        .result-label {
+            font-size: 1rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .result-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1.1;
+            margin: 6px 0 20px 0;
+            will-change: transform, opacity;
+            position: relative;
+            z-index: 2;
+            font-variant-numeric: tabular-nums;
+            -webkit-font-variant-numeric: tabular-nums;
+        }
+
+        @supports (-webkit-background-clip: text) or (background-clip: text) {
+            .result-value {
+                background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                color: transparent;
+            }
+        }
+
+        .result-drop-wrap.active .result-value {
+            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            animation-delay: 0.5s;
+        }
+
+        @keyframes popIn {
+            0%   { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+            60%  { transform: scale(1.18) rotate(4deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+        }
+
+        .result-drop-wrap.active .result-actions {
+            animation: fadeInActions 0.4s ease-out 0.7s forwards;
+        }
+
+        @keyframes fadeInActions { to { opacity: 1; } }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            font-family: inherit;
+            touch-action: manipulation;
+        }
+
+        .btn-copy { background-color: #e0f2fe; color: var(--primary); }
+        .btn-copy:active { transform: scale(0.96); }
+        .btn-close { background-color: #f1f5f9; color: #475569; }
+        .btn-close:active { transform: scale(0.96); }
+
+        .history-toggle {
+            margin-top: 25px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: opacity 0.2s;
+            padding: 8px;
+            touch-action: manipulation;
+        }
+
+        .history-toggle:hover { opacity: 0.8; }
+        .history-toggle svg { width: 16px; height: 16px; fill: currentColor; }
+
+        .history-list {
+            margin-top: 10px;
+            display: none;
+            background: rgba(248, 250, 252, 0.6);
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px solid rgba(226, 232, 240, 0.6);
+        }
+
+        .history-list.active {
+            display: block;
+            animation: slideUpFade 0.3s ease-out;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 8px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            color: #334155;
+            gap: 10px;
+        }
+
+        .history-item:last-child { border-bottom: none; }
+
+        .history-item span:last-child {
+            font-weight: 700;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @media (max-width: 480px) {
+            .main-wrapper { padding: 15px 10px 100px 10px; }
+            .calculator-card { padding: 20px 15px; border-radius: 20px; }
+            h2 { font-size: 1.3rem; }
+            .result-value { font-size: 3rem; }
+            .result-sheet { padding: 50px 20px 22px 20px; }
+            .result-sheet::before { left: 15%; width: 70px; height: 48px; }
+            .result-drop-wrap { padding-top: 30px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            body::after { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="full-width-header">
+        <img src="https://avatars.mds.yandex.net/i?id=6124276844c9718dbf02bd7e3d195efd_l-12898824-images-thumbs&ref=rim&n=13&w=1280&h=720"
+             alt="Логотип"
+             class="header-logo"
+             onerror="this.style.display='none'">
+    </header>
+
+    <main class="main-wrapper">
+        <div class="calculator-card">
+            <h2>Калькулятор остатков</h2>
+
+            <div class="form-group">
+                <label for="materialSelect">Выберите материал:</label>
+                <select id="materialSelect" onchange="updateForm()">
+                    <option value="" disabled selected>-- Выберите из списка --</option>
+                    <option value="1.4|Чай 0,5л|440">Этикетка Чай 0,5л</option>
+                    <option value="1.92|Чай 1л|530">Этикетка Чай 1л</option>
+                    <option value="0.29025|0.33л|185">Этикетка 0.33л</option>
+                    <option value="0.3872|0.5л|232">Этикетка 0.5л</option>
+                    <option value="0.54|1.0л|270">Этикетка 1.0л</option>
+                    <option value="0.6806|1.5л|300">Этикетка 1.5л</option>
+                    <option value="1.076|КОСМЕ|70">Этикетка КОСМЕ</option>
+                    <option disabled>------------------</option>
+                    <option value="0.036|ДМ|10.5">ДМ (Подложка)</option>
+                    <option value="0.155|ШК|30.7">ШК (Подложка)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="totalWeight">Общий вес рулона (в граммах):</label>
+                <input type="text"
+                       id="totalWeight"
+                       placeholder="Например: 1000"
+                       inputmode="decimal"
+                       autocomplete="off"
+                       oninput="toggleClearBtn()">
+                <button class="clear-btn" id="clearBtn" onclick="clearInput()" aria-label="Очистить">✕</button>
+                <span class="info-text" id="weightHint">Введите вес, который показывают весы.</span>
+                <span class="info-text tara-info" id="taraHint"></span>
+            </div>
+
+            <button class="main-btn" id="calcBtn" onclick="calculate()">Рассчитать</button>
+
+            <div class="error" id="errorMsg"></div>
+
+            <div class="history-toggle" onclick="toggleHistory()">
+                <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                Последние расчеты
+            </div>
+            <div class="history-list" id="historyList"></div>
+
+        </div>
+    </main>
+
+    <div class="result-drop-wrap" id="resultSheet">
+        <div class="result-sheet">
+            <div class="drop-tail"></div>
+            <div class="splash">
+                <div class="splash-dot"></div>
+                <div class="splash-dot"></div>
+                <div class="splash-dot"></div>
+                <div class="splash-dot"></div>
+                <div class="splash-dot"></div>
+                <div class="splash-dot"></div>
+            </div>
+            <div class="sheet-drag-handle" id="dragHandle" aria-label="Закрыть свайпом"></div>
+            <div class="result-label">Количество штук:</div>
+            <div class="result-value" id="resultValue">0</div>
+            <div class="result-actions">
+                <button class="action-btn btn-copy" id="copyBtn" onclick="copyResult()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    Копировать
+                </button>
+                <button class="action-btn btn-close" onclick="closeResult()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const select = document.getElementById('materialSelect');
+    const totalInput = document.getElementById('totalWeight');
+    const clearBtn = document.getElementById('clearBtn');
+    const resultSheet = document.getElementById('resultSheet');
+    const resultValue = document.getElementById('resultValue');
+    const errorMsg = document.getElementById('errorMsg');
+    const historyList = document.getElementById('historyList');
+    const copyBtn = document.getElementById('copyBtn');
+    const taraHint = document.getElementById('taraHint');
+    const weightHint = document.getElementById('weightHint');
+    const calcBtn = document.getElementById('calcBtn');
+    const dragHandle = document.getElementById('dragHandle');
+
+    // ============================================================
+    // ===== ЗВУК «ПШИК» =====
+    // ============================================================
+    let audioCtx = null;
+
+    function getAudioContext() {
+        if (!audioCtx) {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                return null;
+            }
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(() => {});
+        }
+        return audioCtx;
+    }
+
+    function createNoiseBuffer(ctx, duration) {
+        const sampleRate = ctx.sampleRate;
+        const length = Math.floor(sampleRate * duration);
+        const buffer = ctx.createBuffer(1, length, sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < length; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        return buffer;
+    }
+
+    // Основной «пшик»: короткий всплеск белого шума через полосовой фильтр с быстрым спадом
+    function playFizzSound() {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        const masterGain = ctx.createGain();
+        masterGain.gain.value = 0.55;
+        masterGain.connect(ctx.destination);
+
+        // Слой 1 — резкий старт (шипение)
+        const noise1 = ctx.createBufferSource();
+        noise1.buffer = createNoiseBuffer(ctx, 0.5);
+
+        const bp1 = ctx.createBiquadFilter();
+        bp1.type = 'bandpass';
+        bp1.frequency.setValueAtTime(1800, now);
+        bp1.frequency.exponentialRampToValueAtTime(6500, now + 0.12);
+        bp1.frequency.exponentialRampToValueAtTime(2600, now + 0.5);
+        bp1.Q.setValueAtTime(0.9, now);
+
+        const hp1 = ctx.createBiquadFilter();
+        hp1.type = 'highpass';
+        hp1.frequency.setValueAtTime(900, now);
+
+        const g1 = ctx.createGain();
+        g1.gain.setValueAtTime(0.0001, now);
+        g1.gain.linearRampToValueAtTime(1.0, now + 0.012);
+        g1.gain.exponentialRampToValueAtTime(0.35, now + 0.15);
+        g1.gain.exponentialRampToValueAtTime(0.08, now + 0.45);
+        g1.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+
+        noise1.connect(bp1);
+        bp1.connect(hp1);
+        hp1.connect(g1);
+        g1.connect(masterGain);
+        noise1.start(now);
+        noise1.stop(now + 0.65);
+
+        // Слой 2 — «щёлк» открытия: очень короткий низкочастотный импульс
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(420, now);
+        osc.frequency.exponentialRampToValueAtTime(120, now + 0.08);
+        const g2 = ctx.createGain();
+        g2.gain.setValueAtTime(0.0001, now);
+        g2.gain.linearRampToValueAtTime(0.35, now + 0.005);
+        g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+        osc.connect(g2);
+        g2.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 0.15);
+
+        // Слой 3 — «пузырьки»: несколько коротких высоких пиков в течение 0.5с
+        for (let i = 0; i < 5; i++) {
+            const t = now + 0.08 + Math.random() * 0.42;
+            const bub = ctx.createOscillator();
+            bub.type = 'sine';
+            const f = 900 + Math.random() * 1400;
+            bub.frequency.setValueAtTime(f, t);
+            bub.frequency.exponentialRampToValueAtTime(f * 1.8, t + 0.04);
+            const gb = ctx.createGain();
+            gb.gain.setValueAtTime(0.0001, t);
+            gb.gain.linearRampToValueAtTime(0.05 + Math.random() * 0.04, t + 0.008);
+            gb.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+            bub.connect(gb);
+            gb.connect(masterGain);
+            bub.start(t);
+            bub.stop(t + 0.09);
+        }
+    }
+
+    function toggleClearBtn() {
+        totalInput.value = totalInput.value.replace(/[^0-9.]/g, '');
+        clearBtn.style.display = totalInput.value ? 'block' : 'none';
+        checkReady();
+    }
+
+    function clearInput() {
+        totalInput.value = '';
+        toggleClearBtn();
+        totalInput.focus();
+    }
+
+    function updateForm() {
+        errorMsg.style.display = 'none';
+        totalInput.value = '';
+        toggleClearBtn();
+        const val = select.value;
+        if (val) {
+            const [, , taraWeightStr] = val.split('|');
+            taraHint.style.display = 'block';
+            taraHint.textContent = `Вес шпули (${taraWeightStr} г) будет вычтен автоматически.`;
+            weightHint.textContent = "Введите общий вес рулона.";
+        } else {
+            taraHint.style.display = 'none';
+            weightHint.textContent = "Введите вес, который показывают весы.";
+        }
+        totalInput.focus();
+        checkReady();
+    }
+
+    function checkReady() {
+        const ok = select.value && parseFloat(totalInput.value) > 0;
+        calcBtn.classList.toggle('ready', !!ok);
+    }
+
+    let bubbleInterval = null;
+    function getViewportHeight() {
+        return window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    }
+
+    function createBubble() {
+        const bubble = document.createElement('div');
+        bubble.className = 'gas-bubble';
+        const size = 8 + Math.random() * 20;
+        bubble.style.width = size + 'px';
+        bubble.style.height = size + 'px';
+        bubble.style.left = (Math.random() * window.innerWidth) + 'px';
+        bubble.style.top = getViewportHeight() + 'px';
+        const sway = (Math.random() - 0.5) * 80;
+        const riseDur = 4000 + Math.random() * 4000;
+        const vh = getViewportHeight();
+        document.body.appendChild(bubble);
+        bubble.animate([
+            { transform: `translate3d(0, 0, 0) scale(0.8)`, opacity: 0 },
+            { transform: `translate3d(${sway * 0.2}px, -30px, 0) scale(1)`, opacity: 0.7, offset: 0.05 },
+            { transform: `translate3d(${sway * 0.5}px, -${vh * 0.5}px, 0) scale(1.05)`, opacity: 0.6, offset: 0.5 },
+            { transform: `translate3d(${sway}px, -${vh + size + 50}px, 0) scale(1.1)`, opacity: 0 }
+        ], { duration: riseDur, easing: 'linear', fill: 'forwards' });
+        setTimeout(() => bubble.remove(), riseDur + 200);
+    }
+
+    function startBubbles() {
+        createBubble();
+        setTimeout(createBubble, 100);
+        setTimeout(createBubble, 200);
+        bubbleInterval = setInterval(createBubble, 220);
+    }
+
+    function stopBubbles() {
+        if (bubbleInterval) { clearInterval(bubbleInterval); bubbleInterval = null; }
+        document.querySelectorAll('.gas-bubble').forEach(b => {
+            const anim = b.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: 'forwards' });
+            anim.onfinish = () => b.remove();
+        });
+    }
+
+    function spawnSplashBurst(centerX, centerY, count = 40) {
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.className = 'trail-particle';
+            const size = 4 + Math.random() * 12;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = centerX + 'px';
+            p.style.top = centerY + 'px';
+            document.body.appendChild(p);
+            const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.5;
+            const distance = 60 + Math.random() * 200;
+            const dx = Math.cos(angle) * distance;
+            const dy = Math.sin(angle) * distance;
+            const gravity = 150 + Math.random() * 180;
+            const dur = 650 + Math.random() * 500;
+            p.animate([
+                { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                { transform: `translate(${dx * 0.65}px, ${dy * 0.65}px) scale(1.15)`, opacity: 0.9, offset: 0.35 },
+                { transform: `translate(${dx}px, ${dy + gravity}px) scale(0.2)`, opacity: 0 }
+            ], { duration: dur, easing: 'cubic-bezier(0.16, 0.84, 0.44, 1)', fill: 'forwards' });
+            setTimeout(() => p.remove(), dur + 100);
+        }
+        const ring = document.createElement('div');
+        ring.style.cssText = `
+            position: fixed; left: ${centerX}px; top: ${centerY}px;
+            width: 10px; height: 6px; border-radius: 50%;
+            border: 3px solid rgba(125, 211, 252, 0.9);
+            transform: translate(-50%, -50%) scale(0.3);
+            pointer-events: none; z-index: 99;
+        `;
+        document.body.appendChild(ring);
+        const ringAnim = ring.animate([
+            { transform: 'translate(-50%, -50%) scale(0.3)', opacity: 1, borderWidth: '4px' },
+            { transform: 'translate(-50%, -50%) scale(7)', opacity: 0, borderWidth: '1px' }
+        ], { duration: 750, easing: 'cubic-bezier(0.16, 0.84, 0.44, 1)', fill: 'forwards' });
+        ringAnim.onfinish = () => ring.remove();
+    }
+
+    function calculate() {
+        const val = select.value;
+        const totalWeight = parseFloat(totalInput.value.replace(',', '.'));
+        errorMsg.style.display = 'none';
+
+        if (!val) { showError("Выберите материал из списка."); return; }
+        if (isNaN(totalWeight) || totalWeight <= 0) { showError("Введите корректный общий вес."); return; }
+
+        const [itemWeightStr, shortName, taraWeightStr] = val.split('|');
+        const itemWeight = parseFloat(itemWeightStr);
+        const taraWeight = parseFloat(taraWeightStr);
+        const netWeight = totalWeight - taraWeight;
+
+        if (netWeight <= 0) {
+            showError(`Вес слишком мал. Он меньше веса шпули (${taraWeight} г).`);
+            return;
+        }
+
+        const quantity = Math.floor(netWeight / itemWeight);
+
+        // «Пшик» сразу при успешном расчёте
+        playFizzSound();
+
+        resultSheet.classList.remove('active', 'closing', 'closing-down', 'closing-left', 'closing-right', 'dragging');
+        resultSheet.style.transform = '';
+        resultSheet.style.opacity = '';
+        void resultSheet.offsetWidth;
+        resultSheet.classList.add('active');
+
+        stopBubbles();
+        startBubbles();
+
+        setTimeout(() => {
+            const sheet = resultSheet.querySelector('.result-sheet');
+            const r = sheet.getBoundingClientRect();
+            spawnSplashBurst(r.left + r.width / 2, r.top + 10, 40);
+        }, 450);
+
+        resultValue.textContent = '0';
+        setTimeout(() => animateValue(resultValue, quantity, 800), 550);
+
+        copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Копировать`;
+        copyBtn.style.color = 'var(--primary)';
+
+        saveToHistory(shortName, totalWeight, quantity);
+
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+            setTimeout(() => navigator.vibrate([30, 40, 30]), 450);
+        }
+    }
+
+    function animateValue(el, to, duration = 800) {
+        const start = performance.now();
+        function step(now) {
+            const p = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.floor(to * eased).toLocaleString('ru-RU');
+            if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+
+    function closeResult(direction = 'down') {
+        stopBubbles();
+        resultSheet.classList.remove('active');
+        resultSheet.style.transform = '';
+        resultSheet.style.opacity = '';
+        if (direction === 'left') resultSheet.classList.add('closing-left');
+        else if (direction === 'right') resultSheet.classList.add('closing-right');
+        else resultSheet.classList.add('closing-down');
+
+        setTimeout(() => {
+            resultSheet.classList.remove('closing-down', 'closing-left', 'closing-right');
+        }, 550);
+    }
+
+    function showError(message) {
+        errorMsg.textContent = message;
+        errorMsg.style.display = 'block';
+        errorMsg.style.animation = 'none';
+        void errorMsg.offsetHeight;
+        errorMsg.style.animation = 'shake 0.4s';
+    }
+
+    function copyResult() {
+        const textToCopy = resultValue.textContent.replace(/\s/g, '');
+        const onSuccess = () => {
+            copyBtn.innerHTML = `✅ Скопировано!`;
+            copyBtn.style.color = '#16a34a';
+            if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+            setTimeout(() => {
+                copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Копировать`;
+                copyBtn.style.color = 'var(--primary)';
+            }, 2000);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textToCopy).then(onSuccess).catch(fallbackCopy);
+        } else { fallbackCopy(); }
+        function fallbackCopy() {
+            const ta = document.createElement('textarea');
+            ta.value = textToCopy;
+            ta.style.cssText = 'position:fixed;opacity:0;left:-9999px;';
+            ta.setAttribute('readonly', '');
+            document.body.appendChild(ta);
+            ta.select();
+            ta.setSelectionRange(0, 99999);
+            try { if (document.execCommand('copy')) onSuccess(); } catch (e) {}
+            document.body.removeChild(ta);
+        }
+    }
+
+    function toggleHistory() { historyList.classList.toggle('active'); }
+
+    function saveToHistory(name, weight, qty) {
+        try {
+            let history = JSON.parse(localStorage.getItem('calcHistory')) || [];
+            history.unshift({ name, weight, qty });
+            history = history.slice(0, 3);
+            localStorage.setItem('calcHistory', JSON.stringify(history));
+            renderHistory();
+        } catch (e) {}
+    }
+
+    function renderHistory() {
+        let history = [];
+        try { history = JSON.parse(localStorage.getItem('calcHistory')) || []; } catch (e) {}
+        if (history.length === 0) {
+            historyList.innerHTML = '<div style="text-align:center; font-size:0.8rem; color:#94a3b8;">История пуста</div>';
+            return;
+        }
+        historyList.innerHTML = history.map(item => `
+            <div class="history-item">
+                <span>${item.name} (${item.weight} г)</span>
+                <span>${item.qty.toLocaleString('ru-RU')} шт</span>
+            </div>
+        `).join('');
+    }
+
+    document.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('pointerdown', e => {
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const r = document.createElement('span');
+            r.className = 'ripple';
+            r.style.width = r.style.height = size + 'px';
+            r.style.left = (e.clientX - rect.left - size / 2) + 'px';
+            r.style.top  = (e.clientY - rect.top  - size / 2) + 'px';
+            btn.appendChild(r);
+            setTimeout(() => r.remove(), 600);
+        }, { passive: true });
+    });
+
+    (function initSwipe() {
+        let startX = 0, startY = 0;
+        let curX = 0, curY = 0;
+        let startTime = 0;
+        let dragging = false;
+        let axis = null;
+        let w = 0, h = 0;
+        const AXIS_LOCK = 8;
+        const OFFSET_THRESHOLD_X = 0.25;
+        const OFFSET_THRESHOLD_Y = 0.3;
+        const VELOCITY_THRESHOLD = 0.6;
+
+        function onStart(e) {
+            if (!resultSheet.classList.contains('active')) return;
+            if (e.touches && e.touches.length > 1) return;
+
+            const t = e.touches ? e.touches[0] : e;
+            startX = t.clientX; startY = t.clientY;
+            curX = startX; curY = startY;
+            startTime = performance.now();
+            axis = null;
+            dragging = true;
+
+            const r = resultSheet.getBoundingClientRect();
+            w = r.width; h = r.height;
+
+            resultSheet.classList.add('dragging');
+        }
+
+        function onMove(e) {
+            if (!dragging) return;
+            const t = e.touches ? e.touches[0] : e;
+            curX = t.clientX; curY = t.clientY;
+
+            let dx = curX - startX;
+            let dy = curY - startY;
+
+            if (!axis) {
+                if (Math.abs(dx) < AXIS_LOCK && Math.abs(dy) < AXIS_LOCK) {
+                    return;
+                }
+                axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+            }
+
+            if (axis === 'y') {
+                if (dy < 0) dy = 0;
+                resultSheet.style.transform = `translate(-50%, ${dy}px)`;
+                resultSheet.style.opacity = String(Math.max(0.25, 1 - dy / (h * 1.6)));
+            } else {
+                resultSheet.style.transform = `translate(calc(-50% + ${dx}px), 0) rotate(${dx * 0.02}deg)`;
+                resultSheet.style.opacity = String(Math.max(0.25, 1 - Math.abs(dx) / (w * 1.2)));
+            }
+
+            if (e.cancelable) e.preventDefault();
+        }
+
+        function onEnd() {
+            if (!dragging) return;
+            dragging = false;
+            resultSheet.classList.remove('dragging');
+
+            const dx = curX - startX;
+            const dy = Math.max(0, curY - startY);
+            const dt = Math.max(1, performance.now() - startTime);
+            const vx = Math.abs(dx) / dt;
+            const vy = dy / dt;
+
+            resultSheet.style.transform = '';
+            resultSheet.style.opacity = '';
+
+            let direction = null;
+
+            if (axis === 'x') {
+                if (Math.abs(dx) > w * OFFSET_THRESHOLD_X || vx > VELOCITY_THRESHOLD) {
+                    direction = dx < 0 ? 'left' : 'right';
+                }
+            } else if (axis === 'y') {
+                if (dy > h * OFFSET_THRESHOLD_Y || vy > VELOCITY_THRESHOLD) {
+                    direction = 'down';
+                }
+            }
+
+            if (direction) {
+                if (navigator.vibrate) navigator.vibrate(15);
+                closeResult(direction);
+            }
+        }
+
+        function shouldStart(e) {
+            const target = e.target;
+            if (!target) return false;
+            if (target.closest('.result-actions')) return false;
+            if (target.closest('.result-value')) return false;
+            return true;
+        }
+
+        const sheet = resultSheet.querySelector('.result-sheet');
+
+        dragHandle.addEventListener('touchstart', e => { if (shouldStart(e)) onStart(e); }, { passive: true });
+        dragHandle.addEventListener('touchmove', e => { if (dragging) onMove(e); }, { passive: false });
+        dragHandle.addEventListener('touchend', onEnd, { passive: true });
+        dragHandle.addEventListener('touchcancel', onEnd, { passive: true });
+
+        sheet.addEventListener('touchstart', e => {
+            if (!shouldStart(e)) return;
+            if (e.target.closest('.sheet-drag-handle')) return;
+            const rect = sheet.getBoundingClientRect();
+            const t = e.touches[0];
+            if (t.clientY - rect.top > rect.height * 0.5) return;
+            onStart(e);
+        }, { passive: true });
+        sheet.addEventListener('touchmove', e => { if (dragging) onMove(e); }, { passive: false });
+        sheet.addEventListener('touchend', onEnd, { passive: true });
+        sheet.addEventListener('touchcancel', onEnd, { passive: true });
+
+        let tapStart = 0;
+        dragHandle.addEventListener('touchstart', () => { tapStart = performance.now(); }, { passive: true });
+        dragHandle.addEventListener('click', () => {
+            if (performance.now() - tapStart < 300) closeResult('down');
+        });
+    })();
+
+    renderHistory();
+    checkReady();
+</script>
+
+</body>
+</html>
